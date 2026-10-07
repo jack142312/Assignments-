@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Assignment planner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400..700&display=swap">
+<style>
+  /* ---------- Tokens ---------- */
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+
+    --bg: #F3F5FA;
+    --surface: #FFFFFF;
+    --field: #F3F5FA;
+    --ink: #141B34;
+    --muted: #586280;
+    --line: #DCE1EC;
+    --accent: #2742E0;
+    --accent-ink: #FFFFFF;
+    --danger: #BF2A1D;
+    --danger-bg: #FCE9E6;
+    --danger-line: #F3C4BE;
+    --scrim: rgba(13, 18, 34, .55);
+
+    --c-red: #D92D20;
+    --c-orange: #F26A0F;
+    --c-amber: #DDA300;
+    --c-lime: #74AD00;
+    --c-green: #15924A;
+    --c-teal: #0A8F86;
+    --c-cyan: #06A3D9;
+    --c-blue: #1B66F0;
+    --c-indigo: #3D3BCB;
+    --c-violet: #9131E6;
+    --c-magenta: #C4189F;
+    --c-rose: #F0457F;
+    --c-brown: #8A5526;
+    --c-slate: #556072;
+
+    --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0D1222;
+      --surface: #161D33;
+      --field: #0D1222;
+      --ink: #E9ECF7;
+      --muted: #9BA5C2;
+      --line: #2A3352;
+      --accent: #93A5FF;
+      --accent-ink: #0D1222;
+      --danger: #FF8E84;
+      --danger-bg: #33161B;
+      --danger-line: #5A2A2F;
+      --scrim: rgba(3, 5, 12, .7);
+      --c-red: #FF6A5C;
+      --c-orange: #FF9440;
+      --c-amber: #FFCC2E;
+      --c-lime: #B6E24A;
+      --c-green: #45D07A;
+      --c-teal: #27CDBE;
+      --c-cyan: #52CEF8;
+      --c-blue: #6AA1FF;
+      --c-indigo: #8E8BFF;
+      --c-violet: #C285FF;
+      --c-magenta: #F56BDD;
+      --c-rose: #FF7AA5;
+      --c-brown: #D09A63;
+      --c-slate: #A3AEC2;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0D1222;
+    --surface: #161D33;
+    --field: #0D1222;
+    --ink: #E9ECF7;
+    --muted: #9BA5C2;
+    --line: #2A3352;
+    --accent: #93A5FF;
+    --accent-ink: #0D1222;
+    --danger: #FF8E84;
+    --danger-bg: #33161B;
+    --danger-line: #5A2A2F;
+    --scrim: rgba(3, 5, 12, .7);
+    --c-red: #FF6A5C;
+    --c-orange: #FF9440;
+    --c-amber: #FFCC2E;
+    --c-lime: #B6E24A;
+    --c-green: #45D07A;
+    --c-teal: #27CDBE;
+    --c-cyan: #52CEF8;
+    --c-blue: #6AA1FF;
+    --c-indigo: #8E8BFF;
+    --c-violet: #C285FF;
+    --c-magenta: #F56BDD;
+    --c-rose: #FF7AA5;
+    --c-brown: #D09A63;
+    --c-slate: #A3AEC2;
+  }
+
+  /* ---------- Base ---------- */
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html.sheet-open { overflow: hidden; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  [hidden] { display: none !important; }
+  button, input, select { font: inherit; color: inherit; }
+  button { touch-action: manipulation; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  h1:focus, .sheet:focus { outline: none; }
+
+  #app {
+    max-width: 30rem;
+    margin: 0 auto;
+    padding: 1.25rem 1rem calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ---------- Screen header ---------- */
+  .top { display: flex; align-items: flex-end; justify-content: space-between; gap: .75rem; margin: .25rem .25rem 1.1rem; }
+  .top-text { min-width: 0; }
+  .pill {
+    flex: none; display: inline-flex; align-items: center; gap: .3rem;
+    min-height: 44px; padding: 0 1.05rem 0 .8rem;
+    border: 0; border-radius: 999px;
+    background: var(--accent); color: var(--accent-ink);
+    font-weight: 700; cursor: pointer;
+  }
+  .today { margin: 0 0 .1rem; color: var(--muted); font-size: .9375rem; }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.6rem, 8vw, 2rem);
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    overflow-wrap: anywhere;
+  }
+  h2 {
+    margin: 1.4rem .25rem .5rem;
+    font-size: .9375rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .top + h2 { margin-top: 0; }
+  h2.overdue-title { color: var(--danger); }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin: -.4rem -.35rem .4rem; }
+  .link {
+    display: inline-flex; align-items: center; gap: .3rem;
+    min-height: 44px; padding: 0 .6rem;
+    background: none; border: 0; border-radius: 10px;
+    color: var(--accent); font-weight: 600; cursor: pointer;
+  }
+  .class-title { display: flex; align-items: flex-start; gap: .7rem; }
+  .class-title .swatch { width: .85rem; height: 2.2rem; border-radius: 4px; background: var(--c); flex: none; }
+
+  /* ---------- Lists ---------- */
+  .list {
+    list-style: none; margin: 0; padding: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .list > li + li { border-top: 1px solid var(--line); }
+  .list.overdue { background: var(--danger-bg); border-color: var(--danger-line); }
+  .list.overdue > li + li { border-top-color: var(--danger-line); }
+
+  /* Tick-off control, shared by every assignment row */
+  .check {
+    flex: none; width: 44px; height: 44px;
+    display: grid; place-items: center;
+    background: none; border: 0; padding: 0; border-radius: 50%; cursor: pointer;
+  }
+  .check i {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid var(--muted);
+    display: grid; place-items: center;
+    color: var(--accent-ink);
+    transition: background-color .15s, border-color .15s;
+  }
+  .check svg { opacity: 0; transition: opacity .15s; }
+  .check[aria-checked="true"] i { background: var(--accent); border-color: var(--accent); }
+  .check[aria-checked="true"] svg { opacity: 1; }
+
+  /* Coming up item: the countdown is the headline */
+  .up { display: flex; align-items: flex-start; gap: .2rem; padding: .7rem .95rem 1rem .3rem; }
+  .up-body {
+    flex: 1; min-width: 0;
+    display: grid; gap: .45rem;
+    padding: .45rem 0 0; margin: 0;
+    background: none; border: 0; border-radius: 8px;
+    text-align: left; cursor: pointer;
+  }
+  .up-count {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.1;
+    letter-spacing: -.015em;
+  }
+  .up-first .up-count {
+    font-weight: 800;
+    font-size: clamp(2.1rem, 10.5vw, 2.9rem);
+    line-height: 1;
+    letter-spacing: -.03em;
+  }
+  .up-first .up-body { padding-top: .2rem; gap: .6rem; }
+  .is-overdue .up-count, .is-overdue .row-dist { color: var(--danger); }
+
+  /* Weeks as bars, days as dots */
+  .tally { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .tally .wk { width: 20px; height: 8px; border-radius: 4px; background: var(--c); }
+  .tally .dy { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .up-first .tally { gap: 5px; }
+  .up-first .tally .wk { width: 26px; height: 10px; border-radius: 5px; }
+  .up-first .tally .dy { width: 10px; height: 10px; }
+
+  .up-name {
+    margin-top: .15rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    letter-spacing: -.01em;
+    overflow-wrap: anywhere;
+  }
+  .up-first .up-name { font-size: 1.5rem; }
+  .up-meta {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: .15rem .9rem;
+    color: var(--muted); font-size: .9375rem;
+  }
+  .meta-start { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .1rem .8rem; min-width: 0; }
+  .chip { display: inline-flex; align-items: center; gap: .45rem; min-width: 0; overflow-wrap: anywhere; }
+  .dot { width: .7rem; height: .7rem; border-radius: 3px; background: var(--c); flex: none; }
+
+  .more { margin: .7rem .25rem 0; color: var(--muted); font-size: .9375rem; }
+
+  /* Class rows */
+  .cls {
+    display: flex; align-items: center; gap: .85rem;
+    width: 100%; min-height: 68px; padding: .8rem .9rem .8rem 1rem;
+    background: none; border: 0; text-align: left; cursor: pointer;
+  }
+  .cls-tab { width: .75rem; align-self: stretch; min-height: 2.6rem; border-radius: 4px; background: var(--c); flex: none; }
+  .cls-text { flex: 1; min-width: 0; display: grid; gap: .1rem; }
+  .cls-name { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; line-height: 1.2; overflow-wrap: anywhere; }
+  .cls-sub { color: var(--muted); font-size: .9375rem; }
+  .cls-sub .late { color: var(--danger); font-weight: 600; }
+  .cls svg { flex: none; color: var(--muted); }
+
+  /* Assignment rows inside a class */
+  .row { display: flex; align-items: center; gap: .2rem; padding: .35rem .95rem .35rem .3rem; }
+  .row-body {
+    flex: 1; min-width: 0; min-height: 52px;
+    display: grid; align-content: center; gap: .1rem;
+    padding: .3rem 0; background: none; border: 0; border-radius: 8px;
+    text-align: left; cursor: pointer;
+  }
+  .row-name { font-weight: 600; overflow-wrap: anywhere; }
+  .row-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 .9rem; color: var(--muted); font-size: .9375rem; }
+  .row-dist { color: var(--ink); }
+  .is-done .row-name { text-decoration: line-through; color: var(--muted); font-weight: 400; }
+  .is-done .row-dist { color: var(--muted); }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    width: 100%; min-height: 50px; padding: .6rem 1rem;
+    border-radius: 14px; border: 1.5px solid var(--line);
+    background: var(--surface);
+    font-weight: 600; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.quiet { border-color: transparent; background: none; }
+  .btn.delete { border-color: transparent; background: none; color: var(--danger); margin-top: .25rem; }
+  .btn.delete.armed { background: var(--danger-bg); border-color: var(--danger-line); }
+
+  /* ---------- Empty states ---------- */
+  .empty {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    padding: 1.4rem 1.2rem 1.25rem;
+  }
+  .empty strong { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; line-height: 1.2; margin-bottom: .35rem; }
+  .empty p { margin: 0; color: var(--muted); max-width: 34ch; }
+  .empty .btn { margin-top: 1.1rem; }
+
+  /* ---------- Save status ---------- */
+  .sync { margin: 1.5rem .25rem 0; min-height: 1.4em; color: var(--muted); font-size: .875rem; }
+
+  /* ---------- Bottom tabs ---------- */
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .tabs-inner { max-width: 30rem; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; }
+  .tab {
+    display: grid; justify-items: center; gap: .15rem;
+    min-height: 60px; padding: .55rem .5rem .5rem;
+    background: none; border: 0; cursor: pointer;
+    color: var(--muted); font-size: .8125rem; font-weight: 600;
+  }
+  .tab[aria-current="page"] { color: var(--accent); }
+  .tab:focus-visible { outline-offset: -4px; }
+
+  /* ---------- Form sheet ---------- */
+  .scrim { position: fixed; inset: 0; z-index: 10; background: var(--scrim); }
+  .sheet {
+    position: fixed; z-index: 11;
+    top: calc(env(safe-area-inset-top, 0px) + min(7vh, 3.5rem));
+    left: 50%; transform: translateX(-50%);
+    width: min(27rem, calc(100% - 1.5rem));
+    max-height: calc(100% - env(safe-area-inset-top, 0px) - min(7vh, 3.5rem) - 1rem);
+    overflow-y: auto; overscroll-behavior: contain;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 1.3rem 1.15rem 1rem;
+    animation: sheet-in .18s ease-out;
+  }
+  @keyframes sheet-in { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .sheet h2 {
+    margin: 0 0 1rem; color: var(--ink);
+    font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; line-height: 1.15; letter-spacing: -.015em;
+  }
+  .field { display: grid; gap: .35rem; margin-bottom: .9rem; }
+  .field > span, .field-label { font-weight: 600; font-size: .9375rem; }
+  .field-label { margin-bottom: .2rem; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 .75rem; align-items: end; }
+  @media (max-width: 359px) { .field-row { grid-template-columns: 1fr; } }
+  .hint { margin: -.45rem 0 .9rem; color: var(--muted); font-size: .875rem; }
+  .tick { display: flex; align-items: flex-start; gap: .6rem; margin-bottom: .9rem; font-size: .9375rem; cursor: pointer; }
+  .tick input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--accent); }
+  .field input, .field select {
+    display: block; width: 100%; min-width: 0; min-height: 50px; padding: .5rem .8rem;
+    background: var(--field); border: 1.5px solid var(--line); border-radius: 12px;
+    font-size: 1rem; text-align: left;
+    -webkit-appearance: none; appearance: none;
+  }
+  .field select {
+    padding-right: 2.4rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 5l4 4 4-4' fill='none' stroke='%237C87A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right .85rem center;
+  }
+  .field input:focus-visible, .field select:focus-visible { outline-offset: 0; border-color: var(--accent); border-radius: 12px; }
+  .swatches { display: flex; flex-wrap: wrap; gap: .15rem; margin: 0 -.3rem .9rem; }
+  .swatch-btn {
+    width: 44px; height: 44px; padding: 0; border: 0; background: none; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .swatch-btn i {
+    width: 30px; height: 30px; border-radius: 50%; background: var(--c);
+    display: grid; place-items: center; color: var(--accent-ink);
+    box-shadow: 0 0 0 0 var(--c);
+  }
+  .swatch-btn svg { opacity: 0; }
+  .swatch-btn[aria-checked="true"] i { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5.5px var(--c); }
+  .swatch-btn[aria-checked="true"] svg { opacity: 1; }
+  .error { margin: -.2rem 0 .8rem; color: var(--danger); font-weight: 600; font-size: .9375rem; }
+  .error:empty { display: none; }
+  .sheet-actions { display: grid; gap: .5rem; margin-top: 1.1rem; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; z-index: 8; left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 4.6rem);
+    width: min(27rem, calc(100% - 2rem));
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .35rem .4rem .35rem 1rem;
+    background: var(--ink); color: var(--bg);
+    border-radius: 14px;
+  }
+  .toast button {
+    min-height: 44px; padding: 0 .9rem; background: none; border: 0; border-radius: 10px;
+    color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+  }
+  .toast button:focus-visible { outline-color: var(--bg); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <main id="view"></main>
+  <p id="sync" class="sync" role="status"></p>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-inner">
+    <button class="tab" data-action="tab" data-tab="upcoming" data-fk="tab-upcoming">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/><path d="M12 13.5v3l2 1"/></svg>
+      Coming up
+    </button>
+    <button class="tab" data-action="tab" data-tab="classes" data-fk="tab-classes">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>
+      Classes
+    </button>
+  </div>
+</nav>
+
+<div id="sheet-root"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+
+<!-- =====================================================================
+     1. DATA LOGIC
+     Classes, assignments and date maths. Nothing in this block touches
+     the page, so it can be copied into a React Native project as-is.
+     ===================================================================== -->
+<script id="logic">
+'use strict';
+
+const NEXT_COUNT = 3;   // how many upcoming assignments to show at minimum
+
+const DEFAULT_ALERT_DAYS = 3;   // used when an assignment has no setting of its own
+const MAX_REPEATS = 60;         // most assignments one repeating series can create
+
+// Choices for "Always show from": how long before the due date an
+// assignment is guaranteed a place on Coming up. Small number = low priority.
+const ALERT_CHOICES = [
+  { days: 0,  label: 'The due date' },
+  { days: 1,  label: '1 day before' },
+  { days: 2,  label: '2 days before' },
+  { days: 3,  label: '3 days before' },
+  { days: 5,  label: '5 days before' },
+  { days: 7,  label: '1 week before' },
+  { days: 10, label: '10 days before' },
+  { days: 14, label: '2 weeks before' },
+  { days: 21, label: '3 weeks before' },
+  { days: 28, label: '4 weeks before' },
+];
+
+// Shown in this order in the colour picker.
+const COLOURS = [
+  { key: 'red',     name: 'Red' },
+  { key: 'orange',  name: 'Orange' },
+  { key: 'amber',   name: 'Yellow' },
+  { key: 'lime',    name: 'Lime' },
+  { key: 'green',   name: 'Green' },
+  { key: 'teal',    name: 'Teal' },
+  { key: 'cyan',    name: 'Sky blue' },
+  { key: 'blue',    name: 'Blue' },
+  { key: 'indigo',  name: 'Indigo' },
+  { key: 'violet',  name: 'Purple' },
+  { key: 'magenta', name: 'Magenta' },
+  { key: 'rose',    name: 'Pink' },
+  { key: 'brown',   name: 'Brown' },
+  { key: 'slate',   name: 'Grey' },
+];
+const COLOUR_KEYS = COLOURS.map(c => c.key);
+// The order new classes are offered colours in, so neighbours look different.
+const COLOUR_SUGGEST_ORDER = ['blue', 'red', 'green', 'amber', 'violet', 'teal', 'orange', 'magenta', 'lime', 'indigo', 'cyan', 'rose', 'brown', 'slate'];
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/* ----- Dates. A date is stored as text: "2026-10-08" (year-month-day). ----- */
+
+function isISODate(text) {
+  if (typeof text !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const [y, m, d] = text.split('-').map(Number);
+  const check = new Date(Date.UTC(y, m - 1, d));
+  return check.getUTCFullYear() === y && check.getUTCMonth() === m - 1 && check.getUTCDate() === d;
+}
+
+function todayISO(now) {
+  now = now || new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+}
+
+// Whole calendar days from one date to another. Negative means the date has passed.
+function daysBetween(fromISO, toISO) {
+  const toUTC = iso => { const [y, m, d] = iso.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+  return Math.round((toUTC(toISO) - toUTC(fromISO)) / 86400000);
+}
+
+// "2026-10-08" plus 7 -> "2026-10-15"
+function addDays(iso, count) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d + count));
+  const pad = n => String(n).padStart(2, '0');
+  return date.getUTCFullYear() + '-' + pad(date.getUTCMonth() + 1) + '-' + pad(date.getUTCDate());
+}
+
+// Every date from `first` to `until`, stepping `everyDays` at a time.
+// Stops one past MAX_REPEATS so the caller can tell the series is too long.
+function repeatDates(first, everyDays, until) {
+  const dates = [];
+  for (let date = first; date <= until && dates.length <= MAX_REPEATS; date = addDays(date, everyDays)) dates.push(date);
+  return dates;
+}
+
+function splitWeeksDays(totalDays) {
+  const n = Math.abs(totalDays);
+  return { weeks: Math.floor(n / 7), days: n % 7 };
+}
+
+// 17 -> "2 weeks, 3 days"   0 -> "Due today"   -2 -> "2 days overdue"
+function describeDistance(daysAway) {
+  if (daysAway === 0) return 'Due today';
+  const { weeks, days } = splitWeeksDays(daysAway);
+  const parts = [];
+  if (weeks) parts.push(weeks + (weeks === 1 ? ' week' : ' weeks'));
+  if (days) parts.push(days + (days === 1 ? ' day' : ' days'));
+  return parts.join(', ') + (daysAway < 0 ? ' overdue' : '');
+}
+
+// "Thu 8 Oct 2026" (day, month, year)
+function formatDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return WEEKDAYS[weekday] + ' ' + d + ' ' + MONTHS[m - 1] + ' ' + y;
+}
+
+// "Monday 5 October"
+function formatLongDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return WEEKDAYS_LONG[weekday] + ' ' + d + ' ' + MONTHS_LONG[m - 1];
+}
+
+/* ----- The data: { classes: [...], assignments: [...] } ----- */
+
+function emptyState() {
+  return { classes: [], assignments: [] };
+}
+
+function newId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+// How many days before the due date an assignment is always shown.
+function cleanAlertDays(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 60 ? value : DEFAULT_ALERT_DAYS;
+}
+
+// Percentage of the subject's final mark, or null when not given.
+function cleanWeight(value) {
+  return typeof value === 'number' && value > 0 && value <= 100 ? Math.round(value * 100) / 100 : null;
+}
+
+// 20 -> "20%"   12.5 -> "12.5%"
+function formatWeight(weight) {
+  return String(weight) + '%';
+}
+
+// Rebuilds saved data into a clean copy, dropping anything malformed.
+function normaliseState(raw) {
+  const out = emptyState();
+  if (!raw || typeof raw !== 'object') return out;
+  const classIds = new Set();
+  for (const c of Array.isArray(raw.classes) ? raw.classes : []) {
+    if (!c || typeof c.id !== 'string' || !/^[a-z0-9]+$/i.test(c.id) || classIds.has(c.id)) continue;
+    classIds.add(c.id);
+    out.classes.push({
+      id: c.id,
+      name: String(c.name || 'Untitled class').slice(0, 60),
+      colour: COLOUR_KEYS.includes(c.colour) ? c.colour : 'blue',
+    });
+  }
+  const assignmentIds = new Set();
+  for (const a of Array.isArray(raw.assignments) ? raw.assignments : []) {
+    if (!a || typeof a.id !== 'string' || !/^[a-z0-9]+$/i.test(a.id) || assignmentIds.has(a.id)) continue;
+    if (!classIds.has(a.classId) || !isISODate(a.due)) continue;
+    assignmentIds.add(a.id);
+    out.assignments.push({
+      id: a.id,
+      classId: a.classId,
+      name: String(a.name || 'Untitled assignment').slice(0, 80),
+      due: a.due,
+      done: a.done === true,
+      alertDays: cleanAlertDays(a.alertDays),
+      weight: cleanWeight(a.weight),
+      seriesId: typeof a.seriesId === 'string' && /^[a-z0-9]+$/i.test(a.seriesId) ? a.seriesId : null,
+    });
+  }
+  return out;
+}
+
+function findClass(state, id) { return state.classes.find(c => c.id === id) || null; }
+function findAssignment(state, id) { return state.assignments.find(a => a.id === id) || null; }
+
+/* ----- Changes. Each one edits the state it is given and is safe to run
+         even if the thing it refers to no longer exists. ----- */
+
+function addClass(state, cls) {
+  if (findClass(state, cls.id)) return;
+  state.classes.push({ id: cls.id, name: cls.name, colour: cls.colour });
+}
+function updateClass(state, id, changes) {
+  const cls = findClass(state, id);
+  if (cls) Object.assign(cls, changes);
+}
+function deleteClass(state, id) {
+  state.classes = state.classes.filter(c => c.id !== id);
+  state.assignments = state.assignments.filter(a => a.classId !== id);
+}
+function addAssignment(state, a) {
+  if (findAssignment(state, a.id) || !findClass(state, a.classId)) return;
+  state.assignments.push({
+    id: a.id, classId: a.classId, name: a.name, due: a.due, done: false,
+    alertDays: cleanAlertDays(a.alertDays),
+    weight: cleanWeight(a.weight),
+    seriesId: a.seriesId || null,     // shared by every assignment made from one repeat
+  });
+}
+function updateAssignment(state, id, changes) {
+  const a = findAssignment(state, id);
+  if (!a) return;
+  if (changes.classId && !findClass(state, changes.classId)) return;
+  Object.assign(a, changes);
+}
+function deleteAssignment(state, id) {
+  state.assignments = state.assignments.filter(a => a.id !== id);
+}
+function setDone(state, id, done) {
+  const a = findAssignment(state, id);
+  if (a) a.done = done;
+}
+
+/* Repeating assignments are stored as ordinary assignments that share a
+   seriesId, so each week's one can be ticked off or changed on its own. */
+
+// The assignments from the same repeat that are due after this one.
+function laterInSeries(state, id) {
+  const a = findAssignment(state, id);
+  if (!a || !a.seriesId) return [];
+  return state.assignments.filter(b => b.seriesId === a.seriesId && b.id !== a.id && b.due > a.due);
+}
+// Applies changes (not the due date) to this assignment and the later ones.
+function updateSeriesFrom(state, id, changes) {
+  const later = laterInSeries(state, id).map(b => b.id);
+  updateAssignment(state, id, changes);
+  const shared = Object.assign({}, changes);
+  delete shared.due;
+  later.forEach(laterId => updateAssignment(state, laterId, shared));
+}
+function deleteSeriesFrom(state, id) {
+  const gone = new Set(laterInSeries(state, id).map(b => b.id));
+  gone.add(id);
+  state.assignments = state.assignments.filter(a => !gone.has(a.id));
+}
+
+/* ----- Questions the screens ask ----- */
+
+function byDueDate(a, b) {
+  return a.due.localeCompare(b.due) || a.name.localeCompare(b.name);
+}
+
+// The "Coming up" list.
+//   overdue: unfinished assignments whose date has passed
+//   next:    every unfinished assignment that is inside its own "always
+//            show" window (alertDays), topped up with the soonest others
+//            until there are at least NEXT_COUNT
+//   later:   how many unfinished assignments are left after those
+function comingUp(state, today) {
+  const open = state.assignments
+    .filter(a => !a.done)
+    .map(a => Object.assign({}, a, { daysAway: daysBetween(today, a.due) }))
+    .sort(byDueDate);
+  const overdue = open.filter(a => a.daysAway < 0);
+  const ahead = open.filter(a => a.daysAway >= 0);
+  const alerted = ahead.filter(a => a.daysAway <= a.alertDays);
+  const others = ahead.filter(a => a.daysAway > a.alertDays);
+  const topUp = others.slice(0, Math.max(0, NEXT_COUNT - alerted.length));
+  const next = alerted.concat(topUp).sort(byDueDate);
+  return {
+    overdue: overdue,
+    next: next,
+    later: ahead.length - next.length,
+  };
+}
+
+// Assignments for one class: unfinished first (soonest first), then finished.
+function classAssignments(state, classId, today) {
+  const mine = state.assignments
+    .filter(a => a.classId === classId)
+    .map(a => Object.assign({}, a, { daysAway: daysBetween(today, a.due) }));
+  return {
+    open: mine.filter(a => !a.done).sort(byDueDate),
+    done: mine.filter(a => a.done).sort((a, b) => byDueDate(b, a)),
+  };
+}
+
+function classSummary(state, classId, today) {
+  const { open, done } = classAssignments(state, classId, today);
+  return {
+    total: open.length + done.length,
+    open: open.length,
+    overdue: open.filter(a => a.daysAway < 0).length,
+    nextDue: open.length ? open[0].due : null,
+  };
+}
+
+function nextUnusedColour(state) {
+  const used = new Set(state.classes.map(c => c.colour));
+  return COLOUR_SUGGEST_ORDER.find(k => !used.has(k)) || COLOUR_SUGGEST_ORDER[state.classes.length % COLOUR_SUGGEST_ORDER.length];
+}
+</script>
+
+
+<!-- =====================================================================
+     2. STORAGE
+     Keeps the data saved. It is stored against your account so it follows
+     you between phone and computer, with a copy on the device as a backup.
+     ===================================================================== -->
+<script id="storage">
+'use strict';
+
+const store = (() => {
+  const LOCAL_KEY = 'assignment-planner:v1';
+
+  let state = readLocal() || emptyState();
+  let onChange = () => {};
+  let onSync = () => {};
+
+  let cloudDoc = null;       // where the data lives in the account store
+  let cloudPending = true;   // true until the account copy has loaded
+  let pendingOps = [];       // changes made before the account copy loaded
+  let writing = false;
+  let dirty = false;
+
+  function readLocal() {
+    try {
+      const raw = localStorage.getItem(LOCAL_KEY);
+      return raw ? normaliseState(JSON.parse(raw)) : null;
+    } catch (e) { return null; }
+  }
+  function writeLocal() {
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+  }
+
+  // Every change to the data goes through here.
+  function mutate(op) {
+    op(state);
+    if (cloudPending) pendingOps.push(op);
+    writeLocal();
+    onChange();
+    pushCloud();
+  }
+
+  async function setWithRetry(doc, body) {
+    try {
+      await doc.set(body);
+    } catch (e) {
+      if (!e || e.code !== 'unavailable') throw e;
+      await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 600));
+      await doc.set(body);
+    }
+  }
+
+  // One write at a time; changes made mid-write are sent straight after.
+  async function pushCloud() {
+    const doc = cloudDoc;
+    if (!doc || cloudPending) return;
+    if (writing) { dirty = true; return; }
+    writing = true;
+    onSync('saving');
+    try {
+      do {
+        dirty = false;
+        await setWithRetry(doc, JSON.parse(JSON.stringify(state)));
+      } while (dirty);
+      onSync('synced');
+    } catch (e) {
+      dirty = false;
+      onSync('error');
+    } finally {
+      writing = false;
+    }
+  }
+
+  function useDeviceOnly() {
+    cloudDoc = null;
+    cloudPending = false;
+    pendingOps = [];
+    onSync('local');
+  }
+
+  function onSnapshot(snap) {
+    if (cloudPending) {
+      if (snap.metadata && snap.metadata.fromCache) return;   // wait for the real copy
+      cloudPending = false;
+      const ops = pendingOps;
+      pendingOps = [];
+      if (snap.exists) {
+        state = normaliseState(snap.data());
+        ops.forEach(op => op(state));       // re-apply anything changed while loading
+        writeLocal();
+        onChange();
+        if (ops.length) pushCloud(); else onSync('synced');
+      } else if (state.classes.length) {
+        pushCloud();                        // first visit on this account: upload what is here
+      } else {
+        onSync('synced');
+      }
+      return;
+    }
+    if (writing || dirty) return;
+    if (!snap.exists || (snap.metadata && snap.metadata.hasPendingWrites)) return;
+    const incoming = normaliseState(snap.data());
+    if (JSON.stringify(incoming) !== JSON.stringify(state)) {
+      state = incoming;                     // changed on another device
+      writeLocal();
+      onChange();
+    }
+  }
+
+  async function connect() {
+    try {
+      if (!window.claude || typeof window.claude.use !== 'function') return useDeviceOnly();
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!db || !user) return useDeviceOnly();
+      const uid = await user.id();
+      if (!uid) return useDeviceOnly();
+      cloudDoc = db.doc('data/users/' + uid + '/planner');
+      cloudDoc.onSnapshot(onSnapshot, useDeviceOnly);
+      setTimeout(() => { if (cloudPending) onSync('local'); }, 15000);
+    } catch (e) {
+      useDeviceOnly();
+    }
+  }
+
+  return {
+    get state() { return state; },
+    mutate: mutate,
+    connect: connect,
+    onChange(fn) { onChange = fn; },
+    onSync(fn) { onSync = fn; },
+  };
+})();
+</script>
+
+
+<!-- =====================================================================
+     3. SCREENS
+     Draws the data from block 1 and turns taps into changes.
+     ===================================================================== -->
+<script id="screens">
+'use strict';
+
+const $view = document.getElementById('view');
+const $sheetRoot = document.getElementById('sheet-root');
+const $toast = document.getElementById('toast');
+const $sync = document.getElementById('sync');
+
+const ui = { tab: 'upcoming', classId: null };
+let sheet = null;          // the open form, if any
+let sheetOpener = null;
+let toastTimer = null;
+let toastUndo = null;
+
+const ICON = {
+  check: '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  forward: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M7 4l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  back: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4L6 9l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  plus: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 3.5v11M3.5 9h11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+};
+
+function esc(text) {
+  return String(text).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+/* ---------- Pieces shared between screens ---------- */
+
+function checkButton(a) {
+  return '<button class="check" role="checkbox" aria-checked="' + (a.done ? 'true' : 'false') + '"' +
+    ' aria-label="Done: ' + esc(a.name) + '" data-action="toggle-done" data-id="' + a.id + '" data-fk="check-' + a.id + '">' +
+    '<i>' + ICON.check + '</i></button>';
+}
+
+function tally(daysAway) {
+  if (daysAway <= 0) return '';
+  const { weeks, days } = splitWeeksDays(daysAway);
+  return '<span class="tally" aria-hidden="true">' +
+    '<i class="wk"></i>'.repeat(Math.min(weeks, 26)) + '<i class="dy"></i>'.repeat(days) + '</span>';
+}
+
+// The round "Add" button in a screen's header. `label` is what it adds.
+function worth(a) {
+  return a.weight ? '<span>Worth ' + esc(formatWeight(a.weight)) + '</span>' : '';
+}
+
+function addButton(action, label) {
+  return '<button class="pill" data-action="' + action + '" data-fk="' + action + '" aria-label="Add ' + label + '">' + ICON.plus + 'Add</button>';
+}
+
+function screenHeader(inner, button) {
+  return '<header class="top"><div class="top-text">' + inner + '</div>' + (button || '') + '</header>';
+}
+
+/* ---------- Coming up ---------- */
+
+function upcomingItem(a, isFirst) {
+  const cls = findClass(store.state, a.classId);
+  return '<li class="up' + (isFirst ? ' up-first' : '') + (a.daysAway < 0 ? ' is-overdue' : '') + '" style="--c: var(--c-' + cls.colour + ')">' +
+    checkButton(a) +
+    '<button class="up-body" data-action="edit-assignment" data-id="' + a.id + '" data-fk="edit-' + a.id + '">' +
+      '<span class="up-count">' + esc(describeDistance(a.daysAway)) + '</span>' +
+      tally(a.daysAway) +
+      '<span class="up-name">' + esc(a.name) + '</span>' +
+      '<span class="up-meta">' +
+        '<span class="meta-start"><span class="chip"><i class="dot"></i>' + esc(cls.name) + '</span>' + worth(a) + '</span>' +
+        '<span>Due ' + esc(formatDate(a.due)) + '</span>' +
+      '</span>' +
+    '</button>' +
+  '</li>';
+}
+
+function renderUpcoming(today) {
+  const state = store.state;
+  const title = '<p class="today">' + esc(formatLongDate(today)) + '</p><h1 tabindex="-1">Coming up</h1>';
+  const plain = screenHeader(title);
+  const head = screenHeader(title, addButton('add-assignment', 'assignment'));
+
+  if (!state.classes.length) {
+    return plain + '<div class="empty"><strong>No classes yet</strong>' +
+      '<p>Add a class, then put each assignment in with its due date. The next ones due show up here.</p>' +
+      '<button class="btn primary" data-action="add-class" data-fk="add-class">Add class</button></div>';
+  }
+  if (!state.assignments.length) {
+    return plain + '<div class="empty"><strong>No assignments yet</strong>' +
+      '<p>Add one and it shows up here with how long you have left.</p>' +
+      '<button class="btn primary" data-action="add-assignment" data-fk="add-assignment">Add assignment</button></div>';
+  }
+
+  const { overdue, next, later } = comingUp(state, today);
+  if (!overdue.length && !next.length) {
+    return head + '<div class="empty"><strong>Nothing left to do</strong>' +
+      '<p>Every assignment is ticked off.</p></div>';
+  }
+
+  let html = head;
+  if (overdue.length) {
+    html += '<h2 class="overdue-title">Overdue</h2><ul class="list overdue">' +
+      overdue.map(a => upcomingItem(a, false)).join('') + '</ul>';
+  }
+  if (next.length) {
+    if (overdue.length) html += '<h2>Next up</h2>';
+    html += '<ul class="list">' + next.map((a, i) => upcomingItem(a, i === 0)).join('') + '</ul>';
+  }
+  if (later) html += '<p class="more">' + plural(later, 'more assignment', 'more assignments') + ' due after ' + (next.length === 1 ? 'this' : 'these') + '.</p>';
+  return html;
+}
+
+/* ---------- Classes ---------- */
+
+function renderClasses(today) {
+  const state = store.state;
+  const title = '<h1 tabindex="-1">Classes</h1>';
+  if (!state.classes.length) {
+    return screenHeader(title) + '<div class="empty"><strong>No classes yet</strong>' +
+      '<p>Each class is a folder for its assignments.</p>' +
+      '<button class="btn primary" data-action="add-class" data-fk="add-class">Add class</button></div>';
+  }
+  const rows = state.classes.map(c => {
+    const s = classSummary(state, c.id, today);
+    let sub;
+    if (!s.total) sub = 'No assignments yet';
+    else if (!s.open) sub = 'All done';
+    else {
+      sub = s.open + ' to do';
+      if (s.overdue) sub += ', <span class="late">' + s.overdue + ' overdue</span>';
+      else sub += ', next due ' + esc(formatDate(s.nextDue));
+    }
+    return '<li><button class="cls" style="--c: var(--c-' + c.colour + ')" data-action="open-class" data-id="' + c.id + '" data-fk="class-' + c.id + '">' +
+      '<i class="cls-tab"></i>' +
+      '<span class="cls-text"><span class="cls-name">' + esc(c.name) + '</span><span class="cls-sub">' + sub + '</span></span>' +
+      ICON.forward + '</button></li>';
+  }).join('');
+  return screenHeader(title, addButton('add-class', 'class')) + '<ul class="list">' + rows + '</ul>';
+}
+
+function assignmentRow(a) {
+  return '<li class="row' + (a.done ? ' is-done' : '') + (!a.done && a.daysAway < 0 ? ' is-overdue' : '') + '">' +
+    checkButton(a) +
+    '<button class="row-body" data-action="edit-assignment" data-id="' + a.id + '" data-fk="edit-' + a.id + '">' +
+      '<span class="row-name">' + esc(a.name) + '</span>' +
+      '<span class="row-meta"><span class="meta-start"><span>Due ' + esc(formatDate(a.due)) + '</span>' + worth(a) + '</span>' +
+      '<span class="row-dist">' + (a.done ? 'Done' : esc(describeDistance(a.daysAway))) + '</span></span>' +
+    '</button></li>';
+}
+
+function renderClass(cls, today) {
+  const { open, done } = classAssignments(store.state, cls.id, today);
+  const nav = '<div class="nav-row">' +
+      '<button class="link" data-action="back-to-classes" data-fk="back">' + ICON.back + 'Classes</button>' +
+      '<button class="link" data-action="edit-class" data-id="' + cls.id + '" data-fk="edit-class">Edit class</button>' +
+    '</div>';
+  const title = '<div class="class-title" style="--c: var(--c-' + cls.colour + ')"><i class="swatch"></i><h1 tabindex="-1">' + esc(cls.name) + '</h1></div>';
+
+  if (!open.length && !done.length) {
+    return nav + screenHeader(title) + '<div class="empty"><strong>No assignments yet</strong>' +
+      '<p>Add each assignment for this class with its due date.</p>' +
+      '<button class="btn primary" data-action="add-assignment" data-fk="add-assignment">Add assignment</button></div>';
+  }
+  let html = nav + screenHeader(title, addButton('add-assignment', 'assignment'));
+  if (open.length) html += '<h2>To do</h2><ul class="list">' + open.map(assignmentRow).join('') + '</ul>';
+  if (done.length) html += '<h2>Done</h2><ul class="list">' + done.map(assignmentRow).join('') + '</ul>';
+  return html;
+}
+
+/* ---------- Drawing the current screen ---------- */
+
+function render() {
+  const active = document.activeElement;
+  const focusKey = active && $view.contains(active) ? active.dataset.fk : null;
+  const today = todayISO();
+
+  let html;
+  if (ui.tab === 'upcoming') {
+    html = renderUpcoming(today);
+  } else {
+    const cls = ui.classId ? findClass(store.state, ui.classId) : null;
+    if (!cls) ui.classId = null;
+    html = cls ? renderClass(cls, today) : renderClasses(today);
+  }
+  $view.innerHTML = html;
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    if (tab.dataset.tab === ui.tab) tab.setAttribute('aria-current', 'page');
+    else tab.removeAttribute('aria-current');
+  });
+
+  if (focusKey) {
+    const again = $view.querySelector('[data-fk="' + focusKey + '"]');
+    if (again) again.focus({ preventScroll: true });
+  }
+}
+
+function goTo(tab, classId) {
+  hideToast();
+  ui.tab = tab;
+  ui.classId = classId || null;
+  render();
+  window.scrollTo(0, 0);
+  const title = $view.querySelector('h1');
+  if (title) title.focus({ preventScroll: true });
+}
+
+/* ---------- Forms ---------- */
+
+function showSheet(html, focusSelector) {
+  sheetOpener = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.fk : null;
+  $sheetRoot.innerHTML = '<div class="scrim" data-action="close-sheet"></div>' +
+    '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">' + html + '</div>';
+  document.documentElement.classList.add('sheet-open');
+  const target = focusSelector ? $sheetRoot.querySelector(focusSelector) : $sheetRoot.querySelector('.sheet');
+  if (target) target.focus();
+}
+
+function closeSheet() {
+  if (!sheet) return;
+  sheet = null;
+  $sheetRoot.innerHTML = '';
+  document.documentElement.classList.remove('sheet-open');
+  if (sheetOpener) {
+    const opener = document.querySelector('[data-fk="' + sheetOpener + '"]');
+    if (opener) opener.focus({ preventScroll: true });
+  }
+  sheetOpener = null;
+}
+
+function sheetError(message, selector) {
+  $sheetRoot.querySelector('#f-error').textContent = message;
+  const field = $sheetRoot.querySelector(selector);
+  if (field) field.focus();
+}
+
+function openAssignmentSheet(id) {
+  const state = store.state;
+  const a = id ? findAssignment(state, id) : null;
+  if (id && !a) return;
+  let classId = '';
+  if (a) classId = a.classId;
+  else if (ui.tab === 'classes' && ui.classId) classId = ui.classId;
+  else if (state.classes.length === 1) classId = state.classes[0].id;
+
+  const classOptions = (classId ? '' : '<option value="">Choose a class</option>') +
+    state.classes.map(c => '<option value="' + c.id + '"' + (c.id === classId ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('');
+
+  const alertDays = a ? a.alertDays : DEFAULT_ALERT_DAYS;
+  const choices = ALERT_CHOICES.slice();
+  if (!choices.some(c => c.days === alertDays)) {
+    choices.push({ days: alertDays, label: plural(alertDays, 'day', 'days') + ' before' });
+    choices.sort((x, y) => x.days - y.days);
+  }
+  const alertOptions = choices.map(c => '<option value="' + c.days + '"' + (c.days === alertDays ? ' selected' : '') + '>' + c.label + '</option>').join('');
+
+  const later = a ? laterInSeries(state, a.id).length : 0;
+  const dueField = '<label class="field"><span>Due date</span><input id="f-due" type="date" value="' + (a ? a.due : '') + '"></label>';
+
+  sheet = { kind: 'assignment', id: a ? a.id : null, armed: null, later: later };
+  showSheet(
+    '<h2 id="sheet-title">' + (a ? 'Edit assignment' : 'Add assignment') + '</h2>' +
+    '<label class="field"><span>Name</span><input id="f-name" type="text" maxlength="80" autocomplete="off" enterkeyhint="done" value="' + (a ? esc(a.name) : '') + '"></label>' +
+    '<label class="field"><span>Class</span><select id="f-class">' + classOptions + '</select></label>' +
+    (a ? dueField :
+      '<div class="field-row">' + dueField +
+        '<label class="field"><span>Repeats</span><select id="f-repeat">' +
+          '<option value="0">Never</option><option value="7">Every week</option><option value="14">Every 2 weeks</option>' +
+        '</select></label>' +
+      '</div>' +
+      '<div id="repeat-extra" hidden>' +
+        '<label class="field"><span>Repeat until</span><input id="f-until" type="date"></label>' +
+        '<p class="hint" id="f-repeat-hint"></p>' +
+      '</div>') +
+    '<div class="field-row">' +
+      '<label class="field"><span>Always show from</span><select id="f-alert">' + alertOptions + '</select></label>' +
+      '<label class="field"><span>Worth (%)</span><input id="f-weight" type="number" inputmode="decimal" min="0" max="100" step="any" placeholder="Optional" value="' + (a && a.weight ? a.weight : '') + '"></label>' +
+    '</div>' +
+    '<p class="hint">Coming up always lists it from then, even when three others are due sooner.</p>' +
+    (later ? '<label class="tick"><input type="checkbox" id="f-series"><span>Also change the ' + plural(later, 'later one', 'later ones') + ' in this repeat. Their due dates stay as they are.</span></label>' : '') +
+    '<p class="error" id="f-error" role="alert"></p>' +
+    '<div class="sheet-actions">' +
+      '<button class="btn primary" data-action="save-assignment">' + (a ? 'Save changes' : 'Add assignment') + '</button>' +
+      '<button class="btn quiet" data-action="close-sheet">Cancel</button>' +
+      (a ? '<button class="btn delete" data-action="delete-assignment" data-label="Delete assignment">Delete assignment</button>' : '') +
+      (later ? '<button class="btn delete" data-action="delete-series" data-label="Delete this and the ' + plural(later, 'later one', 'later ones') + '">Delete this and the ' + plural(later, 'later one', 'later ones') + '</button>' : '') +
+    '</div>',
+    a ? null : '#f-name'
+  );
+}
+
+// Works out the due dates the form is asking for.
+// Returns { dates } or { error, field }.
+function readDueDates() {
+  const due = $sheetRoot.querySelector('#f-due').value;
+  if (!isISODate(due)) return { error: 'Pick the date it is due.', field: '#f-due' };
+  const repeat = $sheetRoot.querySelector('#f-repeat');
+  const every = repeat ? Number(repeat.value) : 0;
+  if (!every) return { dates: [due] };
+  const until = $sheetRoot.querySelector('#f-until').value;
+  if (!isISODate(until)) return { error: 'Pick the last date it could be due, such as the end of semester.', field: '#f-until' };
+  if (until < due) return { error: 'The end date is before the first due date.', field: '#f-until' };
+  const dates = repeatDates(due, every, until);
+  if (dates.length > MAX_REPEATS) return { error: 'That makes more than ' + MAX_REPEATS + ' assignments. Pick an earlier end date.', field: '#f-until' };
+  return { dates: dates };
+}
+
+// Shows or hides the "Repeat until" field and says what will be added.
+function updateRepeatHint() {
+  const repeat = $sheetRoot.querySelector('#f-repeat');
+  if (!repeat) return;
+  const repeating = Number(repeat.value) > 0;
+  $sheetRoot.querySelector('#repeat-extra').hidden = !repeating;
+  if (!repeating) return;
+  const result = readDueDates();
+  $sheetRoot.querySelector('#f-repeat-hint').textContent = result.dates
+    ? 'Adds ' + plural(result.dates.length, 'assignment', 'assignments') + ', the last due ' + formatDate(result.dates[result.dates.length - 1]) + '.'
+    : 'Pick the last date it could be due, such as the end of semester.';
+}
+
+function saveAssignment() {
+  const id = sheet.id;
+  const name = $sheetRoot.querySelector('#f-name').value.trim();
+  const classId = $sheetRoot.querySelector('#f-class').value;
+  if (!name) return sheetError('Give the assignment a name.', '#f-name');
+  if (!classId) return sheetError('Choose the class it belongs to.', '#f-class');
+
+  const due = readDueDates();
+  if (due.error) return sheetError(due.error, due.field);
+
+  const alertDays = Number($sheetRoot.querySelector('#f-alert').value);
+  const weightInput = $sheetRoot.querySelector('#f-weight');
+  const weightText = weightInput.value.trim();
+  let weight = null;
+  if (weightText || (weightInput.validity && weightInput.validity.badInput)) {
+    weight = Number(weightText);
+    if (!weightText || !(weight >= 0 && weight <= 100)) return sheetError('Enter the weight as a percentage from 0 to 100.', '#f-weight');
+    if (weight === 0) weight = null;
+  }
+
+  if (id) {
+    const changes = { name: name, classId: classId, due: due.dates[0], alertDays: alertDays, weight: cleanWeight(weight) };
+    const wholeSeries = $sheetRoot.querySelector('#f-series');
+    if (wholeSeries && wholeSeries.checked) store.mutate(s => updateSeriesFrom(s, id, changes));
+    else store.mutate(s => updateAssignment(s, id, changes));
+  } else {
+    const seriesId = due.dates.length > 1 ? newId() : null;
+    const fresh = due.dates.map(date => ({ id: newId(), classId: classId, name: name, due: date, alertDays: alertDays, weight: weight, seriesId: seriesId }));
+    store.mutate(s => fresh.forEach(one => addAssignment(s, one)));
+  }
+  closeSheet();
+}
+
+function openClassSheet(id) {
+  const state = store.state;
+  const c = id ? findClass(state, id) : null;
+  if (id && !c) return;
+  const colour = c ? c.colour : nextUnusedColour(state);
+  const count = c ? state.assignments.filter(a => a.classId === c.id).length : 0;
+
+  sheet = { kind: 'class', id: c ? c.id : null, colour: colour, armed: null, count: count };
+  showSheet(
+    '<h2 id="sheet-title">' + (c ? 'Edit class' : 'Add class') + '</h2>' +
+    '<label class="field"><span>Name</span><input id="f-name" type="text" maxlength="60" autocomplete="off" autocapitalize="characters" enterkeyhint="done" placeholder="e.g. COMP10002" value="' + (c ? esc(c.name) : '') + '"></label>' +
+    '<div class="field-label" id="colour-label">Colour</div>' +
+    '<div class="swatches" role="radiogroup" aria-labelledby="colour-label">' +
+      COLOURS.map(col => '<button class="swatch-btn" role="radio" aria-checked="' + (col.key === colour ? 'true' : 'false') + '" aria-label="' + col.name + '"' +
+        ' style="--c: var(--c-' + col.key + ')" data-action="pick-colour" data-colour="' + col.key + '"><i>' + ICON.check + '</i></button>').join('') +
+    '</div>' +
+    '<p class="error" id="f-error" role="alert"></p>' +
+    '<div class="sheet-actions">' +
+      '<button class="btn primary" data-action="save-class">' + (c ? 'Save changes' : 'Add class') + '</button>' +
+      '<button class="btn quiet" data-action="close-sheet">Cancel</button>' +
+      (c ? '<button class="btn delete" data-action="delete-class" data-label="Delete class">Delete class</button>' : '') +
+    '</div>',
+    c ? null : '#f-name'
+  );
+}
+
+function saveClass() {
+  const id = sheet.id;
+  const colour = sheet.colour;
+  const name = $sheetRoot.querySelector('#f-name').value.trim();
+  if (!name) return sheetError('Give the class a name.', '#f-name');
+
+  if (id) {
+    store.mutate(s => updateClass(s, id, { name: name, colour: colour }));
+    closeSheet();
+  } else {
+    const fresh = { id: newId(), name: name, colour: colour };
+    store.mutate(s => addClass(s, fresh));
+    closeSheet();
+    goTo('classes', fresh.id);
+  }
+}
+
+// Deleting takes two taps: the first one asks, the second one does it.
+function armDelete(button, question) {
+  const which = button.dataset.action;
+  if (sheet.armed === which) return true;
+  $sheetRoot.querySelectorAll('.btn.delete.armed').forEach(other => {
+    other.classList.remove('armed');
+    other.textContent = other.dataset.label;
+  });
+  sheet.armed = which;
+  button.classList.add('armed');
+  button.textContent = question;
+  return false;
+}
+
+/* ---------- Toast ---------- */
+
+function showToast(message, undo) {
+  clearTimeout(toastTimer);
+  toastUndo = undo;
+  $toast.innerHTML = '<span>' + esc(message) + '</span><button data-action="undo">Undo</button>';
+  $toast.hidden = false;
+  toastTimer = setTimeout(hideToast, 6000);
+}
+function hideToast() {
+  clearTimeout(toastTimer);
+  toastUndo = null;
+  $toast.hidden = true;
+  $toast.innerHTML = '';
+}
+
+/* ---------- Taps ---------- */
+
+const actions = {
+  'tab'(el) { goTo(el.dataset.tab, null); },
+  'open-class'(el) { goTo('classes', el.dataset.id); },
+  'back-to-classes'() { goTo('classes', null); },
+
+  'add-class'() { openClassSheet(null); },
+  'edit-class'(el) { openClassSheet(el.dataset.id); },
+  'pick-colour'(el) {
+    sheet.colour = el.dataset.colour;
+    $sheetRoot.querySelectorAll('.swatch-btn').forEach(b => b.setAttribute('aria-checked', b === el ? 'true' : 'false'));
+  },
+  'save-class'() { saveClass(); },
+  'delete-class'(el) {
+    const question = sheet.count
+      ? 'Tap again to delete this class and its ' + plural(sheet.count, 'assignment', 'assignments')
+      : 'Tap again to delete this class';
+    if (!armDelete(el, question)) return;
+    const id = sheet.id;
+    store.mutate(s => deleteClass(s, id));
+    closeSheet();
+    goTo('classes', null);
+  },
+
+  'add-assignment'() { openAssignmentSheet(null); },
+  'edit-assignment'(el) { openAssignmentSheet(el.dataset.id); },
+  'save-assignment'() { saveAssignment(); },
+  'delete-assignment'(el) {
+    if (!armDelete(el, 'Tap again to delete this assignment')) return;
+    const id = sheet.id;
+    store.mutate(s => deleteAssignment(s, id));
+    closeSheet();
+  },
+  'delete-series'(el) {
+    if (!armDelete(el, 'Tap again to delete ' + plural(sheet.later + 1, 'assignment', 'assignments'))) return;
+    const id = sheet.id;
+    store.mutate(s => deleteSeriesFrom(s, id));
+    closeSheet();
+  },
+  'toggle-done'(el) {
+    const id = el.dataset.id;
+    const a = findAssignment(store.state, id);
+    if (!a) return;
+    const done = !a.done;
+    store.mutate(s => setDone(s, id, done));
+    if (done) showToast('Marked as done', () => store.mutate(s => setDone(s, id, false)));
+    else hideToast();
+  },
+  'undo'() {
+    const undo = toastUndo;
+    hideToast();
+    if (undo) undo();
+  },
+
+  'close-sheet'() { closeSheet(); },
+};
+
+document.addEventListener('click', event => {
+  const el = event.target.closest('[data-action]');
+  if (!el) return;
+  const run = actions[el.dataset.action];
+  if (run) run(el);
+});
+
+$sheetRoot.addEventListener('input', event => {
+  const error = $sheetRoot.querySelector('#f-error');
+  if (error) error.textContent = '';      // the message is out of date once something changes
+  if (event.target.matches('#f-repeat, #f-due, #f-until')) updateRepeatHint();
+});
+$sheetRoot.addEventListener('change', event => {
+  if (event.target.matches('#f-repeat, #f-due, #f-until')) updateRepeatHint();
+});
+
+document.addEventListener('keydown', event => {
+  if (!sheet) return;
+  if (event.key === 'Escape') { event.preventDefault(); closeSheet(); return; }
+  if (event.key === 'Enter' && event.target.matches('input[type="text"], input[type="number"]')) {
+    event.preventDefault();
+    if (sheet.kind === 'class') saveClass(); else saveAssignment();
+    return;
+  }
+  if (event.key === 'Tab') {   // keep focus inside the open form
+    const items = Array.from($sheetRoot.querySelectorAll('button, input, select'));
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !$sheetRoot.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+});
+
+/* ---------- Start ---------- */
+
+const SYNC_TEXT = {
+  saving: 'Saving…',
+  synced: 'Saved to your account.',
+  local: 'Saved on this device only.',
+  error: 'Could not save to your account. Your changes are kept on this device and will be sent with your next change.',
+};
+
+store.onChange(render);
+store.onSync(status => { $sync.textContent = SYNC_TEXT[status] || ''; });
+render();
+store.connect();
+
+// The countdowns depend on today's date, so redraw when the day changes
+// and whenever the app is brought back to the front.
+function redrawAtMidnight() {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+  setTimeout(() => { render(); redrawAtMidnight(); }, next - now);
+}
+redrawAtMidnight();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+</script>
+</body>
+</html>
